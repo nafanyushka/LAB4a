@@ -323,3 +323,13 @@ void printTreeKeys(Tree* tree, int i){
     printf("%d\n", tree->key);
     printTreeKeys(tree->left, i + 1);
 }
+
+void freeTree(Tree* tree){
+    if(tree == NULL) {
+        return;
+    }
+    freeTree(tree->right);
+    freeItem(tree->item);
+    freeTree(tree->left);
+    free(tree);
+}

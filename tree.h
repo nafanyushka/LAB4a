@@ -23,5 +23,6 @@ int delete(Tree** first, int key);
 DynArray* findKey(Tree* tree, int key);
 DynArray* findLess(Tree* tree, int key);
 void printTreeKeys(Tree* tree, int i);
+void freeTree(Tree* tree);
 
 #endif //LAB4A_TREE_H

@@ -20,7 +20,6 @@ void dialogue(){
 
     int choose;
     DynArray* items;
-    Item* item;
 
     do{
         printf("\nВведите 1, чтобы добавить элемент в дерево.\n"
@@ -96,4 +95,6 @@ void dialogue(){
         }
     }while(choose != 0);
 
+    freeArray(items);
+    freeTree(tree);
 }
