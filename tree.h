@@ -15,6 +15,7 @@ struct Tree{
     Tree* left;
     Tree* right;
     Tree* previous;
+    Tree* next;
 };
 Tree* createTree(int key, Item* item);
 int addTree(Tree** first, Tree* plug);

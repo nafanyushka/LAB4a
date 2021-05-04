@@ -9,6 +9,7 @@ Tree* createTree(int key, Item* item){
     tree->left = NULL;
     tree->right = NULL;
     tree->previous = NULL;
+    tree->next = NULL;
     tree->key = key;
     tree->item = item;
     return tree;
@@ -31,149 +32,212 @@ Tree* findToDelete(Tree* first, int key){
 }
 
 int delete(Tree** first, int key){
-    Tree* delete = findToDelete(*first, key);
-    if(delete == NULL)
-        return 0;
-    if(delete != *first) {
-        if (delete->right == NULL && delete->left == NULL) {
-            if (key > delete->previous->key) {
-                delete->previous->right = NULL;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            } else {
-                delete->previous->left = NULL;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            }
+    Tree* deleter = *first;
+    Tree* before = deleter;
+    while(deleter->key != key){
+        if(key <= deleter->key){
+            before = deleter;
+            deleter = deleter->left;
         }
-        if (delete->left == NULL && delete->right != NULL) {
-            Tree* pointer = delete->previous;
-            if(key > pointer->key){
-                pointer->right = delete->right;
-                pointer->right->previous = pointer;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            }
-            else{
-                pointer->left = delete->right;
-                pointer->left->previous = pointer;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            }
+        else{
+            before = deleter;
+            deleter = deleter->right;
         }
-        if(delete->left != NULL && delete->right == NULL){
-            Tree* pointer = delete->previous;
-            if(key > pointer->key){
-                pointer->right = delete->left;
-                pointer->right->previous = pointer;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            }
-            else{
-                pointer->left = delete->left;
-                delete->left->previous = pointer;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            }
+        if(deleter == NULL)
+            return 0; //НЕ НАЙДЕН ТАКОЙ КЛЮЧ
+    }
+    Tree* previous = deleter->previous;
+    Tree* next = deleter->next;
+    if(previous == NULL && next == NULL){
+        freeTree(deleter);
+        *first = NULL;
+        return 1;
+    }
+    if(previous == NULL && next != NULL){
+        next->previous = NULL;
+        if(next == before){
+            before->left = deleter->right;
+            freeItem(deleter->item);
+            free(deleter);
+            return 1;
         }
-        if(delete->left != NULL && delete->right != NULL){
-            Tree* pointer = delete->left;
-            Tree* previous = delete->previous;
-            if(pointer->right == NULL){
-                if(pointer->key > previous->key){
-                    previous->right = pointer;
-                    pointer->right = delete->right;
-                    pointer->previous = delete->previous;
-                    freeItem(delete->item);
-                    free(delete);
-                    return 1;
-                }
-                else{
-                    previous->left = pointer;
-                    pointer->right = delete->right;
-                    pointer->previous = delete->previous;
-                    freeItem(delete->item);
-                    free(delete);
-                    return 1;
-                }
-            }
-            while(pointer->right != NULL){
-                pointer = pointer->right;
-            }
-            pointer->previous->right = pointer->left;
-            if(pointer->key > previous->key){
-                previous->right = pointer;
-                pointer->right = delete->right;
-                pointer->left = delete->left;
-                pointer->previous = delete->previous;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            }
-            else{
-                previous->left = pointer;
-                pointer->right = delete->right;
-                pointer->left = delete->left;
-                pointer->previous = delete->previous;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            }
+        else if(deleter->right == next)
+            next->right = NULL;
+        else
+            next->right = deleter->right;
+        if(deleter == *first){
+            *first = next;
         }
+        else if(key <= before->key){
+            before->left = next;
         }
+        else{
+            before->right = next;
+        }
+        freeItem(deleter->item);
+        free(deleter);
+        return 1;
+    }
+    if(previous != NULL && next == NULL){
+        previous->next = NULL;
+        previous->right = deleter->right;
+        if(before == previous){
+            freeItem(deleter->item);
+            free(deleter);
+            return 1;
+        }
+        else if(deleter->left == previous){
+            previous->left = NULL;
+        }
+        else
+            previous->left = deleter->left;
+        if(deleter == *first){
+            *first = previous;
+        }
+        else if(key <= before->key){
+            before->left = previous;
+        }
+        else{
+            before->right = previous;
+        }
+        freeItem(deleter->item);
+        free(deleter);
+        return 1;
+    }
+/* TODO:
+     *  По бокам нули.
+     *  У превиуса есть левая ветка, и хрен что с ней сделаешь
+     *
+     *
+                                                             */
+    next->previous = previous;
+    previous->next = next;
+    Tree* pro = previous;
+    while(pro->right != previous){
+        pro = pro->previous;
+        if(pro == NULL)
+            break;
+    }
+    if(deleter->left == NULL && deleter->right == NULL){
+        if(key <= before->key)
+            before->left = NULL;
+        else
+            before->right = NULL;
+        freeItem(deleter->item);
+        free(deleter);
+        return 1;
+    }
+    if(deleter->previous == deleter->left){
+        if(deleter == *first){
+            *first = previous;
+        }
+        else if(key <= before->key){
+            before->left = previous;
+        }
+        else
+            before->right = previous;
+        previous->right = deleter->right;
+        freeItem(deleter->item);
+        free(deleter);
+        return 1;
+    }
+    if(pro == NULL){
+        if(previous->left == NULL){
+            if(deleter == *first)
+                *first = previous;
+            else if(key <= before->key)
+                before->left = previous;
+            else
+                before->right = previous;
+            previous->left = deleter->left;
+            previous->right = deleter->right;
+            freeItem(deleter->item);
+            free(deleter);
+            return 1;
+        }
+        else{
+            if(deleter == *first)
+                *first = previous;
+            else if(key <= before->key)
+                before->left = previous;
+            else
+                before->right = previous;
+            previous->left->right = previous->right;
+            previous->left = deleter->left;
+            previous->right = deleter->right;
+            freeItem(deleter->item);
+            free(deleter);
+            return 1;
+        }
+    }
     else{
-        if(delete->left == NULL && delete->right == NULL){
-            freeItem(delete->item);
-            free(delete);
-            *first = NULL;
-            return 1;
-        }
-        if(delete->left == NULL && delete->right != NULL){
-            *first = delete->right;
-            (*first)->previous = NULL;
-            freeItem(delete->item);
-            free(delete);
-            return 1;
-        }
-        if(delete->left != NULL && delete->right == NULL){
-            *first = delete->left;
-            (*first)->previous = NULL;
-            freeItem(delete->item);
-            free(delete);
-            return 1;
-        }
-        if(delete->left != NULL && delete->right != NULL){
-            Tree* pointer = delete->left;
-            if(pointer->right == NULL){
-                *first = pointer;
-                (*first)->right = delete->right;
-                (*first)->previous = NULL;
-                freeItem(delete->item);
-                free(delete);
-                return 1;
-            }
-            while(pointer->right != NULL){
-                pointer = pointer->right;
-            }
-            pointer->previous->right = pointer->left;
-            pointer->left = delete->left;
-            pointer->right = delete->right;
-            *first = pointer;
-            (*first)->previous = NULL;
-            freeItem(delete->item);
-            free(delete);
-            return 1;
-        }
+        if(deleter == *first)
+            *first = previous;
+        else if(key <= before->key)
+            before->left = previous;
+        else
+            before->right = previous;
+        pro->right = previous->left;
+        previous->left = deleter->left;
+        previous->right = deleter->right;
+        freeItem(deleter->item);
+        free(deleter);
+        return 1;
+    }
+}
+
+void addLeft(Tree* tree, Tree* plug){
+    if(tree->previous != NULL){
+        tree->left = plug;
+        tree->previous->next = plug;
+        plug->previous = tree->previous;
+        tree->previous = plug;
+        plug->next = tree;
+    }
+    else{
+        tree->left = plug;
+        plug->previous = NULL;
+        tree->previous = plug;
+        plug->next = tree;
     }
 }
 
 
+void addRight(Tree* tree, Tree* plug){
+    if(tree->next != NULL){
+        tree->right = plug;
+        plug->next = tree->next;
+        tree->next->previous = plug;
+        tree->next = plug;
+        plug->previous = tree;
+    }
+    else{
+        tree->right = plug;
+        plug->next = NULL;
+        tree->next = plug;
+        plug->previous = tree;
+    }
+}
+
+void addEquals(Tree* tree, Tree* plug){
+    if(tree->left != NULL){
+        plug->next = tree;
+        plug->previous = tree->previous;
+        tree->previous->next = plug;
+        tree->previous = plug;
+        plug->left = tree->left;
+        tree->left = plug;
+    }
+    else{
+        plug->next = tree;
+        plug->previous = tree->previous;
+        if(tree->previous != NULL){
+            tree->previous->next = plug;
+        }
+        tree->previous = plug;
+        tree->left = plug;
+    }
+}
 
 int addTree(Tree** first, Tree* plug){
     int key = plug->key;
@@ -184,9 +248,7 @@ int addTree(Tree** first, Tree* plug){
     Tree* putIn = *first;
     while(1 == 1){
         if(key == putIn->key){
-            plug->left = putIn->left;
-            putIn->left = plug;
-            plug->right = NULL;
+            addEquals(putIn, plug);
             return 0;
         }
         if(key <= putIn->key){
@@ -195,8 +257,7 @@ int addTree(Tree** first, Tree* plug){
                 continue;
             }
             else{
-                putIn->left = plug;
-                plug->previous = putIn;
+                addLeft(putIn, plug);
                 return 0;
             }
         }
@@ -206,8 +267,7 @@ int addTree(Tree** first, Tree* plug){
                 continue;
             }
             else{
-                putIn->right = plug;
-                plug->previous = putIn;
+                addRight(putIn, plug);
                 return 0;
             }
         }
@@ -215,25 +275,15 @@ int addTree(Tree** first, Tree* plug){
 }
 
 void printTree(Tree* tree){
-    if(tree == NULL) {
-        printf("На данный момент дерево пусто.\n");
+    Tree* node = tree;
+    if(node == NULL)
         return;
+    while(node->left != NULL){
+        node = node->left;
     }
-    if(tree->left == NULL && tree->right == NULL){
-        printInfo(tree->item);
-    }
-    if(tree->left != NULL && tree->right != NULL){
-        printTree(tree->left);
-        printInfo(tree->item);
-        printTree(tree->right);
-    }
-    if(tree->left != NULL && tree->right == NULL){
-        printTree(tree->left);
-        printInfo(tree->item);
-    }
-    if(tree->left == NULL && tree->right != NULL){
-        printInfo(tree->item);
-        printTree(tree->right);
+    while(node != NULL){
+        printInfo(node->item);
+        node = node->next;
     }
 }
 
