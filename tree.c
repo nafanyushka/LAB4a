@@ -56,23 +56,28 @@ int delete(Tree** first, int key){
     if(previous == NULL && next != NULL){
         next->previous = NULL;
         if(next == before){
-            before->left = deleter->right;
+            before->left = NULL;
             freeItem(deleter->item);
             free(deleter);
             return 1;
         }
-        else if(deleter->right == next)
-            next->right = NULL;
-        else
-            next->right = deleter->right;
+        else if(deleter->right == next) {
+            if(deleter == *first)
+                *first = next;
+            else
+                before->left = deleter->right;
+            freeItem(deleter->item);
+            free(deleter);
+            return 1;
+        }
         if(deleter == *first){
-            *first = next;
+            *first = deleter->right;
         }
         else if(key <= before->key){
-            before->left = next;
+            before->left = deleter->right;
         }
         else{
-            before->right = next;
+            before->right = deleter->right;
         }
         freeItem(deleter->item);
         free(deleter);
@@ -80,25 +85,29 @@ int delete(Tree** first, int key){
     }
     if(previous != NULL && next == NULL){
         previous->next = NULL;
-        previous->right = deleter->right;
         if(before == previous){
+            before->right = NULL;
             freeItem(deleter->item);
             free(deleter);
             return 1;
         }
         else if(deleter->left == previous){
-            previous->left = NULL;
+            if(deleter == *first)
+                *first = deleter->left;
+            else
+                before->right = deleter->left;
+            freeItem(deleter->item);
+            free(deleter);
+            return 1;
         }
-        else
-            previous->left = deleter->left;
         if(deleter == *first){
-            *first = previous;
+            *first = deleter->left;
         }
         else if(key <= before->key){
-            before->left = previous;
+            before->left = deleter->left;
         }
         else{
-            before->right = previous;
+            before->right = deleter->left;
         }
         freeItem(deleter->item);
         free(deleter);
@@ -141,6 +150,13 @@ int delete(Tree** first, int key){
         free(deleter);
         return 1;
     }
+    if(before == deleter->previous){
+        before->right = deleter->right;
+        previous->right = deleter->right;
+        freeItem(deleter->item);
+        free(deleter);
+        return 1;
+    }
     if(pro == NULL){
         if(previous->left == NULL){
             if(deleter == *first)
@@ -171,14 +187,23 @@ int delete(Tree** first, int key){
         }
     }
     else{
+        Tree* lastBranch = previous;
+        Tree* left = lastBranch->left;
+        while(left != NULL){
+            if(left->key == lastBranch->key)
+                lastBranch = left;
+            else
+                break;
+            left = left->left;
+        }
         if(deleter == *first)
             *first = previous;
         else if(key <= before->key)
             before->left = previous;
         else
             before->right = previous;
-        pro->right = previous->left;
-        previous->left = deleter->left;
+        pro->right = lastBranch->left;
+        lastBranch->left = deleter->left;
         previous->right = deleter->right;
         freeItem(deleter->item);
         free(deleter);

@@ -5,8 +5,31 @@
 #include "dialogue.h"
 
 void dialogue(){
+
+    FILE* fd = fopen("test", "rb");
+    Tree* tree = NULL;
+    fseek(fd, 0, SEEK_END);
+    int end = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+
+    while(!feof(fd)){
+        int keys;
+        float numbers;
+        fread(&keys, 1, sizeof(int), fd);
+        fread(&numbers, 1, sizeof(numbers), fd);
+        if(tree == NULL)
+            tree = createTree(keys, createItem(numbers, "root", keys));
+        else {
+            addTree(&tree, createTree(keys, createItem(numbers, "snuse", keys)));
+        }
+
+    }
+
     printf("Введите первый ключ и информацию.\nКлюч: ");
     int key = getInt();
+//float number;
+//int key;
+//char* text;
     printf("Число с плавающей точкой: ");
     float number = getFloat();
     char* text;
@@ -16,7 +39,7 @@ void dialogue(){
         text = get_String();
     }while(strlen(text) < 1);
 
-    Tree* tree = createTree(key, createItem(number, text, key));
+    tree = createTree(key, createItem(number, text, key));
 
     int choose;
     DynArray* items;
