@@ -2,6 +2,8 @@
 // Created by Nafany on 22.04.2021.
 //
 
+#include <time.h>
+
 #include "tree.h"
 
 Tree* createTree(int key, Item* item){
@@ -407,4 +409,64 @@ void freeTree(Tree* tree){
     freeItem(tree->item);
     freeTree(tree->left);
     free(tree);
+}
+
+void f_Timing(){
+    Tree* root = NULL;
+    int n = 10, key[10000], k, cnt = 1000000, i, m;
+    clock_t first, last;
+    while(n-- > 0){
+        srand(time(NULL));
+        for(i = 0; i < 10000; i++)
+            key[i] = rand() * rand();
+        for(i = 0; i < cnt; ){
+            k = rand() * rand();
+            if(!addTree(&root, createTree(k, createItem(0, "0", k))))
+                i++;
+        }
+        m = 0;
+        first = clock();
+        for(i = 0; i < 10000; i++) {
+            if(i % 1000 == 0){
+                printf("|");
+            }
+            if (findKey(root, key[i]))
+                m++;
+        }
+        last = clock();
+        printf("\n%d объектов найдено.\n", m);
+        printf("Тест номер %d. Число узлов дерева: %d, время: %f сек.\n", (10 - n), (10 - n) * cnt,
+               (float)(last - first) / CLOCKS_PER_SEC);
+    }
+    freeTree(root);
+}
+
+void d_Timing(){
+    Tree* root = NULL;
+    int n = 10, key[10000], k, cnt = 1000000, i, m;
+    clock_t first, last;
+    while(n-- > 0) {
+        srand(time(NULL));
+        for (i = 0; i < 10000; i++)
+            key[i] = rand() * rand();
+        for (i = 0; i < cnt;) {
+            k = rand() * rand();
+            if (!addTree(&root, createTree(k, createItem(0, "0", k))))
+                i++;
+        }
+        m = 0;
+        first = clock();
+        for(i = 0; i < 10000; i++) {
+            if(i % 1000 == 0){
+                printf("|");
+            }
+            if (delete(&root, key[i]))
+                m++;
+        }
+        last = clock();
+        printf("\n%d объектов удалено.\n", m);
+        printf("Тест номер %d. Число узлов дерева: %d, время: %d сек.\n", (10 - n), (10 - n) * cnt,
+               (int)(last - first) / CLOCKS_PER_SEC);
+    }
+    freeTree(root);
 }

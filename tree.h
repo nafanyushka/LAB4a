@@ -25,5 +25,7 @@ DynArray* findKey(Tree* tree, int key);
 DynArray* findLess(Tree* tree, int key);
 void printTreeKeys(Tree* tree, int i);
 void freeTree(Tree* tree);
+void f_Timing();
+void d_Timing();
 
 #endif //LAB4A_TREE_H
